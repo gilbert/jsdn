@@ -68,6 +68,7 @@ class ConnectionView extends Backbone.View
 
 
 Property = Backbone.Model.extend({})
+
 JsdnObject = Backbone.Collection.extend
   model: Property
   initialize: (models, options) ->
@@ -87,8 +88,9 @@ JsdnObject = Backbone.Collection.extend
 PrimitiveView = Backbone.View.extend
   className: 'value'
   initialize: (options) ->
+    @scope = options.scope
     @$el.draggable
-      containment: '#jsdn-diagram'
+      containment: @scope.el
       drag: => this.trigger('move')
       stop: => this.trigger('move')
     @$el.css(position: 'absolute') # why does it relative
@@ -133,6 +135,7 @@ PropertyView = Backbone.View.extend
 
   initialize: (options) ->
     @app = options.app
+    @scope = options.scope
 
   renderConnection: ->
     @connView.render()
@@ -142,19 +145,18 @@ PropertyView = Backbone.View.extend
     @connView?.remove()
 
     # Render self
-    console.log('RENDERING WITH', @model.toJSON());
     @$el.html this.template @model.toJSON()
 
     # Create & render value
     if @model.get('value').constructor == JsdnObject
       # Value is an object
-      @valueView = new ObjectView(collection: @model.get('value'), app: @app)
+      @valueView = new ObjectView(collection: @model.get('value'), app: @app, scope: @scope)
     else
       # Value is a primitive (string, integer)
-      @valueView = new PrimitiveView(model: @model, app: @app)
+      @valueView = new PrimitiveView(model: @model, app: @app, scope: @scope)
 
     this.listenTo @valueView, 'move', () => this.renderConnection()
-    @app.pubsub.trigger 'jsdn:new-val', @valueView
+    @scope.trigger 'jsdn:new-val', @valueView
 
     # Create & render connection
     @connView = new ConnectionView(from: this, to: @valueView, app: @app)
@@ -174,9 +176,10 @@ VarNameView = PropertyView.extend
 
   initialize: (options) ->
     @app = options.app
+    @scope = options.scope
     @value = options.value
     @$el.draggable
-      containment: '#jsdn-diagram'
+      containment: @scope.el
       drag: => this.renderConnection()
       stop: => this.renderConnection()
     @$el.css(position: 'absolute') # why does it relative
@@ -194,8 +197,9 @@ ObjectView = Backbone.View.extend
 
   initialize: (options) ->
     @app = options.app
+    @scope = options.scope
     @$el.draggable
-      containment: '#jsdn-diagram'
+      containment: @scope.el
       drag: =>
         this.trigger('move')
         this.renderConnections()
@@ -206,7 +210,7 @@ ObjectView = Backbone.View.extend
     @type = if @collection.call then 'function' else 'object'
 
   addProperty: (prop) ->
-    view = @propViews[prop.cid] = new PropertyView(model: prop, app: @app)
+    view = @propViews[prop.cid] = new PropertyView(model: prop, app: @app, scope: @scope)
     @$('.properties').append  view.render().el
 
   renderConnections: ->
@@ -265,38 +269,39 @@ ScopeView = Backbone.View.extend
   initialize: (options) ->
     return unless @el
     @app = options.app
-    @scope = options.scope
+    @vars = options.vars
 
     # Compile objects
-    for name, value of @scope
+    for name, value of @vars
       if typeof value == 'function'
         func = new JsdnObject(null, { attrs: {}, call: value })
-        @scope[name] = new Property({ name: name, value: func })
+        @vars[name] = new Property({ name: name, value: func, scope: this })
       else if typeof value == 'object'
         obj = new JsdnObject(null, { attrs: value })
-        @scope[name] = new Property({ name: name, value: obj })
+        @vars[name] = new Property({ name: name, value: obj, scope: this })
       else
-        @scope[name] = new Property({ name, value })
+        @vars[name] = new Property({ name, value, scope: this })
 
-    # Set up SVG for drawing line connections
-    @app.svg = Raphael("graph", 1000, 400)
-    line = @app.svg.path("M0 -20 L0 -20").attr
-      stroke: "#222"
-      'stroke-dasharray': "-"
-      fill: "none"
-      opacity: 0
-    this.listenTo @app.pubsub, 'jsdn:new-val', (view) => @$el.append(view.render().el)
+    if options.root == true
+      # Set up SVG for drawing line connections
+      @app.svg = Raphael("graph", 1000, 400)
+      line = @app.svg.path("M0 -20 L0 -20").attr
+        stroke: "#222"
+        'stroke-dasharray': "-"
+        fill: "none"
+        opacity: 0
+      this.on 'jsdn:new-val', (view) => @$el.append(view.render().el)
 
     # Store child views for cleanup
     @childViews = []
 
-  addVariable: (name, value) ->
-    view = @childViews[value.cid] = new VarNameView(model: value, app: @app)
+  addLocalVariable: (name, value) ->
+    view = @childViews[value.cid] = new VarNameView(model: value, app: @app, scope: this)
     @$el.append  view.render().el
 
   render: ->
     view.remove() for cid, view of @propViews
-    this.addVariable(name, value) for name, value of @scope
+    this.addLocalVariable(name, value) for name, value of @vars
 
     # object = new JsdnObject(null, { attrs: rootObject })
     # window.objectView = new ObjectView(collection: object, app: @app, pos: { x: 20, y: 20 })
@@ -304,12 +309,12 @@ ScopeView = Backbone.View.extend
     # objectView.repositionValues()
 
 window.JSDN =
-  graph: (rootObject) ->
+  graph: (variables) ->
     this.pubsub = _.extend({}, Backbone.Events)
 
-    this.jsdnView = new ScopeView({
-      app: this,
-      scope: rootObject,
+    this.jsdnView = new ScopeView
+      root: true
+      app: this
+      vars: variables
       el: '#jsdn-diagram'
-    });
-    this.jsdnView.render();
+    this.jsdnView.render()
