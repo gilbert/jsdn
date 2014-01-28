@@ -1,0 +1,57 @@
+<!doctype html>
+<head>
+  <title>JSDN Example #1</title>
+  <link rel="stylesheet" type="text/css" href="assets/jsdn.css" />
+</head>
+<body>
+  <div id="jsdn-diagram">
+    <div id="graph"></div>
+  </div>
+
+  <div id="templates">
+    <script class="jsdn-var-name" type="text/template">
+      <b>var</b> {{ name }}
+    </script>
+
+    <script class="jsdn-property" type="text/template">
+      {{ name }}
+    </script>
+
+    <script class="jsdn-object" type="text/template">
+      <div class="properties"></div>
+    </script>
+
+    <script class="jsdn-function" type="text/template">
+      <div class="function-definition">
+        <div class="inner">{{ def }}</div>
+      </div>
+      <div class="properties"></div>
+    </script>
+  </div>
+
+  <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.2/raphael-min.js"></script>
+  <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+  <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+  <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
+  <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.0/backbone-min.js"></script>
+  <script type="text/javascript" src="../lib/jsdn.js"></script>
+  <script type="text/javascript">
+    var rootObject = {
+      x: 5,
+      y: 'hello',
+      f: function (x) { return x * x },
+      obj: {
+        nested: {
+          a: 11
+        },
+        b: 12,
+        c: "thirteen"
+      }
+    };
+    var graph = new JSDN.graph(rootObject)
+  </script>
+
+
+</body>
+</html>
+

@@ -1,0 +1,52 @@
+#jsdn { position: relative; }
+#graph { background: #eaedf0; }
+
+.object, .value, .var-name {
+  cursor: pointer;
+  position: absolute; top: 0; left: 0;
+  text-align: center;
+}
+
+.var-name {
+  color: black;
+}
+.var-name b { color: #999; }
+
+.object {
+  background: #fd923a;
+  width: 130px;
+}
+.object .function-definition {
+  background: #0e79ec;
+  border-radius: 65px / 16px;
+  line-height: 32px;
+  min-width: 132px;
+  position: absolute; top: -16px;
+}
+.object .function-definition .inner {
+  color: black;
+  position: relative; top: -31px;
+  white-space: nowrap;
+  width: auto;
+}
+
+.property {
+  padding: 8px;
+}
+.property + .property {
+  border-top: 1px solid #EAEDF0;
+}
+
+.value {
+  background: #f3f3f3;
+  border: 1px dashed;
+  font-weight: bold;
+  padding: 4px;
+  min-width: 40px;
+}
+.value.number {
+  color: #3498db;
+}
+.value.string { color: #9bac55; }
+.value.string::before { content: '"'; }
+.value.string::after { content: '"'; }
