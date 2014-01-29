@@ -5,10 +5,9 @@ _.mixin
 # ConectionView original taken from https://github.com/idflood/ThreeNodes.js
 class ConnectionView extends Backbone.View
   initialize: (options) ->
-    @app = options.app
+    @scope = options.scope
     super
-    @container = $("#graph")
-    @line = @app.svg.path().attr
+    @line = @scope.svg.path().attr
       stroke: "#222"
       fill: "none"
     # set the dom element
@@ -18,13 +17,13 @@ class ConnectionView extends Backbone.View
     @render()
 
   remove: () ->
-    if @app.svg && @line
+    if @scope.svg && @line
       @line.remove()
       delete @line
     return true
 
   render: () ->
-    if @app.svg && @line && @line.attrs
+    if @scope.svg && @line && @line.attrs
       @line.attr
         path: @getPath()
         'arrow-end': 'classic-wide-long'
@@ -48,9 +47,9 @@ class ConnectionView extends Backbone.View
     f1 = @getNodePosition(@from_node, 'from')
     f2 = @getNodePosition(@to_node, 'to')
 
-    offset = $('#jsdn-diagram').offset()
-    ofx = $('#jsdn-diagram').scrollLeft() - offset.left
-    ofy = $('#jsdn-diagram').scrollTop() - offset.top
+    offset = @scope.$el.offset()
+    ofx = @scope.$el.scrollLeft() - offset.left
+    ofy = @scope.$el.scrollTop() - offset.top
     x1 = f1.left + ofx
     y1 = f1.top + ofy
     x4 = f2.left + ofx
@@ -134,7 +133,6 @@ PropertyView = Backbone.View.extend
   template: _.getTemplate 'jsdn-property'
 
   initialize: (options) ->
-    @app = options.app
     @scope = options.scope
 
   renderConnection: ->
@@ -150,17 +148,18 @@ PropertyView = Backbone.View.extend
     # Create & render value
     if @model.get('value').constructor == JsdnObject
       # Value is an object
-      @valueView = new ObjectView(collection: @model.get('value'), app: @app, scope: @scope)
+      @valueView = new ObjectView(collection: @model.get('value'), scope: @scope)
     else
       # Value is a primitive (string, integer)
-      @valueView = new PrimitiveView(model: @model, app: @app, scope: @scope)
+      @valueView = new PrimitiveView(model: @model, scope: @scope)
 
     this.listenTo @valueView, 'move', () => this.renderConnection()
-    @scope.trigger 'jsdn:new-val', @valueView
+    this.listenTo @scope, 'move', () => this.renderConnection()
+    @scope.trigger 'new-val', @valueView
 
     # Create & render connection
-    @connView = new ConnectionView(from: this, to: @valueView, app: @app)
-    $('#graph svg').append @connView.render().el
+    @connView = new ConnectionView(from: this, to: @valueView, scope: @scope)
+    $('svg', @scope.graph).append @connView.render().el
     @
 
   repositionValue: (options={}) ->
@@ -175,7 +174,6 @@ VarNameView = PropertyView.extend
     'dblclick': 'repositionValueAnimate'
 
   initialize: (options) ->
-    @app = options.app
     @scope = options.scope
     @value = options.value
     @$el.draggable
@@ -196,7 +194,6 @@ ObjectView = Backbone.View.extend
     'dblclick': 'repositionAnimate'
 
   initialize: (options) ->
-    @app = options.app
     @scope = options.scope
     @$el.draggable
       containment: @scope.el
@@ -210,7 +207,7 @@ ObjectView = Backbone.View.extend
     @type = if @collection.call then 'function' else 'object'
 
   addProperty: (prop) ->
-    view = @propViews[prop.cid] = new PropertyView(model: prop, app: @app, scope: @scope)
+    view = @propViews[prop.cid] = new PropertyView(model: prop, scope: @scope)
     @$('.properties').append  view.render().el
 
   renderConnections: ->
@@ -265,11 +262,13 @@ ObjectView = Backbone.View.extend
 
 
 ScopeView = Backbone.View.extend
+  className: 'scope'
 
   initialize: (options) ->
-    return unless @el
-    @app = options.app
+    @isRoot = options.root
     @vars = options.vars
+    @width = options.width
+    @height = options.height
 
     # Compile objects
     for name, value of @vars
@@ -282,39 +281,52 @@ ScopeView = Backbone.View.extend
       else
         @vars[name] = new Property({ name, value, scope: this })
 
-    if options.root == true
-      # Set up SVG for drawing line connections
-      @app.svg = Raphael("graph", 1000, 400)
-      line = @app.svg.path("M0 -20 L0 -20").attr
-        stroke: "#222"
-        'stroke-dasharray': "-"
-        fill: "none"
-        opacity: 0
-      this.on 'jsdn:new-val', (view) => @$el.append(view.render().el)
+    # Set up SVG for drawing line connections
+    @graph = $('<div class="graph" />').appendTo(@el)
+    @svg = Raphael(@graph[0], @width, @height)
+    @svg.path("M0 -20 L0 -20").attr
+      stroke: "#222"
+      'stroke-dasharray': "-"
+      fill: "none"
+      opacity: 0
+
+    this.on 'new-val', (view) => @$el.append(view.render().el)
 
     # Store child views for cleanup
     @childViews = []
 
   addLocalVariable: (name, value) ->
-    view = @childViews[value.cid] = new VarNameView(model: value, app: @app, scope: this)
+    view = @childViews[value.cid] = new VarNameView(model: value, scope: this)
     @$el.append  view.render().el
+
+  createInnerScope: (locals) ->
+    newScope = new ScopeView
+      vars: locals
+      width: 300
+      height: 200
+    @$el.append(newScope.el)
+    newScope.$el.draggable
+      containment: @el
+      drag: -> newScope.trigger('move')
+      stop: -> newScope.trigger('move')
+    newScope.render()
 
   render: ->
     view.remove() for cid, view of @propViews
     this.addLocalVariable(name, value) for name, value of @vars
 
     # object = new JsdnObject(null, { attrs: rootObject })
-    # window.objectView = new ObjectView(collection: object, app: @app, pos: { x: 20, y: 20 })
+    # window.objectView = new ObjectView(collection: object, pos: { x: 20, y: 20 })
     # @$el.append(objectView.render({ top: 20, left: 20 }).el)
     # objectView.repositionValues()
 
 window.JSDN =
   graph: (variables) ->
-    this.pubsub = _.extend({}, Backbone.Events)
-
-    this.jsdnView = new ScopeView
+    this.scope = new ScopeView
       root: true
-      app: this
       vars: variables
       el: '#jsdn-diagram'
-    this.jsdnView.render()
+      width: 1000
+      height: 400
+    this.scope.render()
+    this

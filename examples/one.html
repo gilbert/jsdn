@@ -5,7 +5,6 @@
 </head>
 <body>
   <div id="jsdn-diagram">
-    <div id="graph"></div>
   </div>
 
   <div id="templates">
@@ -36,7 +35,7 @@
   <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.0/backbone-min.js"></script>
   <script type="text/javascript" src="../lib/jsdn.js"></script>
   <script type="text/javascript">
-    var rootObject = {
+    var variables = {
       x: 5,
       y: 'hello',
       f: function (x) { return x * x },
@@ -48,7 +47,13 @@
         c: "thirteen"
       }
     };
-    var graph = new JSDN.graph(rootObject)
+    var graph = new JSDN.graph(variables);
+    console.log('GRAPH', graph);
+
+    graph.scope.createInnerScope({
+      localOne: 11,
+      localTwo: "two"
+    });
   </script>
 
 
