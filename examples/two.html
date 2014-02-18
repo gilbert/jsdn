@@ -1,0 +1,108 @@
+<!doctype html>
+<head>
+  <title>JSDN Example #1</title>
+  <link rel="stylesheet" type="text/css" href="assets/jsdn.css" />
+</head>
+<body>
+  <div id="jsdn-diagram">
+  </div>
+
+  <div id="templates">
+    <script class="jsdn-var-name" type="text/template">
+      <b>var</b> {{ name }}
+    </script>
+
+    <script class="jsdn-property" type="text/template">
+      {{ name }}
+    </script>
+
+    <script class="jsdn-object" type="text/template">
+      <div class="properties"></div>
+    </script>
+
+    <script class="jsdn-function" type="text/template">
+      <div class="function-definition">
+        <div class="inner">{{ def }}</div>
+      </div>
+      <div class="properties"></div>
+    </script>
+  </div>
+
+  <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.2/raphael-min.js"></script>
+  <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+  <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+  <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
+  <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.0/backbone-min.js"></script>
+  <script type="text/javascript" src="../lib/jsdn.js"></script>
+  <script type="text/javascript" src="./assets/vm-bundle.js"></script>
+
+  <!-- Some JavaScript source code -->
+  <script id="source" type="text/template">
+  var counter = 0;
+  var generateId = function () {
+    counter += 1;
+    return counter;
+  };
+
+  var chatMessage = {
+    id: generateId(),
+    message: 'Hi there'
+  };
+
+  var otherChatMessage = {
+    id: generateId(),
+    message: 'o hai'
+  };
+  </script>
+
+  <script type="text/javascript">
+
+    var ignore = {
+      'undefined': true,
+      'Object': true,
+      'Function': true,
+      'Number': true,
+      'Boolean': true,
+      'String': true,
+      'Array': true,
+      'Date': true,
+      'RegExp': true,
+      'Error': true,
+      'EvalError': true,
+      'RangeError': true,
+      'ReferenceError': true,
+      'SyntaxError': true,
+      'TypeError': true,
+      'URIError': true,
+      'StopIteration': true,
+      'Math': true,
+      'JSON': true,
+      'parseInt': true,
+      'parseFloat': true,
+      'global': true
+    };
+
+    // Eval source and use result as global scope
+    var Vm = require('vm.js');
+    var vm = new Vm();
+    vm.eval( $('#source').html() );
+
+    // Grab resulting variables from vm
+    var variables = {};
+    for (var v in vm.realm.global) {
+      if (!ignore[v]) variables[v] = vm.realm.global[v];
+    }
+    // var variables =
+
+    var graph = new JSDN.graph(variables);
+    console.log('GRAPH', graph);
+
+    // graph.scope.createInnerScope({
+    //   name: 'Alice'
+    // });
+  </script>
+
+
+</body>
+</html>
+
