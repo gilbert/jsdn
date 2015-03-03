@@ -38,21 +38,15 @@
 
   <!-- Some JavaScript source code -->
   <script id="source" type="text/template">
-  var counter = 0;
-  var generateId = function () {
-    counter += 1;
-    return counter;
-  };
+// This works! Crazy!
+var x = { randomProperty: 9 };
 
-  var chatMessage = {
-    id: generateId(),
-    message: 'Hi there'
-  };
+var myFunc = function () {
+  console.log("Yes I am a function");
+};
 
-  var otherChatMessage = {
-    id: generateId(),
-    message: 'o hai'
-  };
+// We can still call it, too
+// myFunc();
   </script>
 
   <script type="text/javascript">
@@ -98,7 +92,8 @@
     console.log('GRAPH', graph);
 
     // graph.scope.createInnerScope({
-    //   name: 'Alice'
+    //   a: 7,
+    //   b: 15
     // });
   </script>
 

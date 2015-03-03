@@ -3,7 +3,7 @@
 
 .scope {
   border: 3px dashed #1b7ade;
-  min-height: 200px;
+  min-height: 100px;
   min-width: 300px;
   position: absolute; top: 0; left: 0;
 }
