@@ -13,4 +13,5 @@ JSDN is intended to be a tool for teaching not just the JavaScript language, but
 1. [Variables and Function Calls](learn/jsdn-functions-1.pdf?raw=true)
 2. [More Function Calls](learn/jsdn-functions-2.pdf?raw=true)
 3. [Functions as Arguments](learn/jsdn-functions-3.pdf?raw=true)
+3. [Closures](learn/jsdn-closures-1.pdf?raw=true)
 4. [Objects in Memory](learn/jsdn-objects-1.pdf?raw=true)
