@@ -1,0 +1,14 @@
+{
+  "id": "jsdn",
+  "name": "JSDN",
+  "description": "JavaScript Diagram Notation",
+  "author": "Gilbert <gilbertbagrza@gmail.com>",
+  "main": "Readme.md",
+  "structure": [
+    "learn/functions-1/course.json",
+    "learn/functions-2/course.json",
+    "learn/functions-3/course.json",
+    "learn/objects-1/course.json",
+    "learn/closures-1/course.json"
+  ]
+}
