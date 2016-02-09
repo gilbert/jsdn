@@ -5,10 +5,11 @@
   "author": "Gilbert <gilbertbagrza@gmail.com>",
   "main": "Readme.md",
   "structure": [
-    "learn/functions-1/course.json",
-    "learn/functions-2/course.json",
-    "learn/functions-3/course.json",
-    "learn/objects-1/course.json",
-    "learn/closures-1/course.json"
+    "learn/functions-1/Readme.md",
+    "learn/functions-2/Readme.md",
+    "learn/functions-3/Readme.md",
+    "learn/objects-1/Readme.md",
+    "learn/closures-1/Readme.md",
+    "https://github.com/mindeavor/test-course"
   ]
 }
